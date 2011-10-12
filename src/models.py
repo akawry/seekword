@@ -4,7 +4,7 @@ from dict2xml import dict2xml
 
 class Level(db.Model):
     ''' Defines a level'''
-    
+      
     # the word grid as a string. wrapped around by the client  
     grid = db.StringProperty()
     # list of words available to be found in the grid 
@@ -13,11 +13,11 @@ class Level(db.Model):
     time = db.DateTimeProperty()
     
     def to_xml(self):
-        obj = {"response" : {"grid": self.grid, "word_bank" : {"word" : self.word_bank}, "time" : str(self.time.utcnow())}}
+        obj = {"response" : {"level_id": self.key().id(), "grid": self.grid, "word_bank" : {"word" : self.word_bank}, "time" : str(self.time.utcnow())}}
         return dict2xml(obj).to_string()
     
     def to_json(self):
-        obj = {"response" : {"grid": self.grid, "word_bank" : self.word_bank, "time" : str(self.time.utcnow())}}
+        obj = {"response" : {"level_id": self.key().id(), "grid": self.grid, "word_bank" : self.word_bank, "time" : str(self.time.utcnow())}}
         return simplejson.dumps(obj)
     
     
@@ -36,3 +36,5 @@ class Submission(db.Model):
     time = db.DateTimeProperty()
     # list of words found in the session 
     words_found = db.StringListProperty()
+    # reference to the level object
+    level = db.ReferenceProperty(Level)
