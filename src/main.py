@@ -17,7 +17,6 @@ def get_current_level():
 class LevelHandler(webapp.RequestHandler):
 
     def get(self):
-        
         level = get_current_level()
         
         if level is not None:
@@ -34,16 +33,18 @@ class ScoreHandler(webapp.RequestHandler):
     
     def get_user_stats(self, user, format):
         
-        played = 0
-        submissions = user.submission_set
-        if submissions is not None:
-            played = submissions.count()
-        
-        res = {"response": {"user" : user.name, "played" : played}}
-        
+        if user is not None:
+            played = 0
+            submissions = user.submission_set
+            if submissions is not None:
+                played = submissions.count()
+            
+            res = {"response": {"user" : user.name, "played" : played}}
+        else :
+            res = {"response": {"error": "unknown user"}}
+            
         if format == "json":
             res = simplejson.dumps(res)
-        
         elif format == "xml":
             res = dict2xml(res).to_string()
             
@@ -70,19 +71,21 @@ class ScoreHandler(webapp.RequestHandler):
                 i = i + 1
             
             res = {"response": ranks}
-            if format == "json":
-                return simplejson.dumps(res)
-            elif format == "xml":
-                return dict2xml(res).to_string()
+        else :
+            res = {"response": {"error": "could not get the level"}}
+            
+        if format == "json":
+            return simplejson.dumps(res)
+        elif format == "xml":
+            return dict2xml(res).to_string()
             
     def get(self):
+
         format = self.request.get('format', 'json').lower()
         user = self.request.get('user', None)
         if user is not None:
             user = User.all().filter("name =", user).get()
-            
-            if user is not None:
-                res = self.get_user_stats(user, format)   
+            res = self.get_user_stats(user, format)   
         else:
             range = self.request.get('range', 'now')
             page = int(self.request.get('page', 0))
