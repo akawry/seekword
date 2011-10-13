@@ -1,6 +1,7 @@
 var GRID_SIZE = 9,
 	GAME_LENGTH,
-	HIGHSCORE_LENGTH;
+	HIGHSCORE_LENGTH,
+	BUFFER_LENGTH;
 
 client = {
 	init : function(args){
@@ -17,13 +18,16 @@ client = {
 				console.log(res);
 				GAME_LENGTH = res.game_length;
 				HIGHSCORE_LENGTH = res.highscore_length;
-				console.log(GAME_LENGTH, HIGHSCORE_LENGTH);
+				BUFFER_LENGTH = res.buffer_length;
+				console.log(GAME_LENGTH, BUFFER_LENGTH, HIGHSCORE_LENGTH);
 				
 				var state = res.state.toLowerCase();
 				if (state == "game"){
 					this.requestGame(res.remaining_time);
 				} else if (state == "highscore"){
 					this.requestHighscore(res.remaining_time);
+				} else if (state == "buffer"){
+					this.waitForOthers(res.remaining_time);
 				}
 			},
 			context: this
@@ -55,18 +59,11 @@ client = {
 				}
 			}
 		});
-
-		this.requestHighscore();
 	},
 	
 	requestGame : function(remaining_time){
 		console.log("requesting game with "+remaining_time+" seconds left");
-		$("#scores").css({
-			display: 'none'
-		});
-		$("#game").css({
-			display: 'block'
-		});
+		this.setState("game");
 		
 		$.ajax({
 			url: '/level?format=json',
@@ -80,18 +77,13 @@ client = {
 		var me = this;
 		setTimeout(function(){
 			me.submitGame();
+			me.waitForOthers();
 		}, remaining_time * 1000);
 	},
 	
 	requestHighscore: function(remaining_time){
 		console.log("request highscores");
-		
-		$("#game").css({
-			display: 'none'
-		});
-		$("#scores").css({
-			display: 'block'
-		});
+		this.setState("scores");
 		
 		$.ajax({
 			url: '/score?format=json',
@@ -132,5 +124,57 @@ client = {
 		});
 		
 		$("#list").html(list);
+	},
+	
+	waitForOthers : function(remaining_time){
+		this.setState("buffer");
+		remaining_time = remaining_time || BUFFER_LENGTH;
+		var me = this;
+		setTimeout(function(){
+			me.requestHighscore();
+		}, remaining_time * 1000);
+	},
+	
+	setState : function(state){
+		switch(state){
+		case "game":
+			$("#game").css({
+				display: 'block'
+			});
+			$("#scores").css({
+				display: 'none'
+			});
+			$("#waiting").css({
+				display: 'none'
+			});
+			
+			break;
+			
+		case "buffer":
+			$("#game").css({
+				display: 'none'
+			});
+			$("#scores").css({
+				display: 'none'
+			});
+			$("#waiting").css({
+				display: 'block'
+			});
+			
+			break;
+			
+		case "scores":
+			$("#game").css({
+				display: 'none'
+			});
+			$("#scores").css({
+				display: 'block'
+			});
+			$("#waiting").css({
+				display: 'none'
+			});
+			
+			break;
+		}
 	}
 };

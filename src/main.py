@@ -9,9 +9,11 @@ import datetime
 import os
 
 # game length, in seconds
-GAME_LENGTH = 30
+GAME_LENGTH = 20
 # showing the highscores, in seconds
-HIGHSCORE_LENGTH = 30
+HIGHSCORE_LENGTH = 20
+# buffer time between games and highscores
+BUFFER_LENGTH = 10
 
 def get_current_level():
     level = memcache.get('level')
@@ -28,20 +30,26 @@ class HandshakeHandler(webapp.RequestHandler):
         format = self.request.get('format', 'json')
         if action == 'get_state':
             res = {'game_length' : GAME_LENGTH,
-                   'highscore_length' : HIGHSCORE_LENGTH}
+                   'highscore_length' : HIGHSCORE_LENGTH,
+                   'buffer_length' : BUFFER_LENGTH}
             
             level = get_current_level()
             
             if level is not None:
                 now = datetime.datetime.now()
-                then = level.time + datetime.timedelta(seconds = GAME_LENGTH)
+                game_end = level.time + datetime.timedelta(seconds = GAME_LENGTH)
+                buffer_end = game_end + datetime.timedelta(seconds = BUFFER_LENGTH)
+                highscore_end = buffer_end + datetime.timedelta(seconds = HIGHSCORE_LENGTH)
             
-                if now < then:
+                if now < game_end:
                     res['state'] = 'game'
-                    res['remaining_time'] = (then - now).seconds
-                else:
+                    res['remaining_time'] = (game_end - now).seconds
+                elif now < buffer_end:
+                    res['state'] = 'buffer'
+                    res['remaining_time'] = (buffer_end - now).seconds
+                else :
                     res['state'] = 'highscore'
-                    res['remaining_time'] = (then + datetime.timedelta(seconds = HIGHSCORE_LENGTH) - now).seconds
+                    res['remaining_time'] = (highscore_end - now).seconds
             else :
                 res = {'error': 'could not find any levels'}
             
