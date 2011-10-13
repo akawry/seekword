@@ -6,13 +6,51 @@ from django.utils import simplejson
 from models import Level, User, Submission
 from dict2xml import dict2xml
 import datetime
+import os
+
+# game length, in minutes
+GAME_LENGTH = 2
+# showing the highscores, in minutes
+HIGHSCORE_LENGTH = 1
 
 def get_current_level():
     level = memcache.get('level')
     if level is None:
-        level = Level.all().order('-time').get()
-        memcache.set('level', level)
+        now = datetime.datetime.now()
+        level = Level.all().filter('time <=', now).filter('time >=', now - datetime.timedelta(minutes = GAME_LENGTH + HIGHSCORE_LENGTH)).get()
+        #memcache.set('level', level)
     return level
+
+class HandshakeHandler(webapp.RequestHandler):
+    def get(self):
+        action = self.request.get('action', 'get_state')
+        format = self.request.get('format', 'json')
+        if action == 'get_state':
+            res = {'game_length' : GAME_LENGTH,
+                   'highscore_length' : HIGHSCORE_LENGTH}
+            
+            level = get_current_level()
+            
+            if level is not None:
+                now = datetime.datetime.now()
+                then = level.time + datetime.timedelta(minutes = GAME_LENGTH)
+            
+                if now < then:
+                    res['state'] = 'game'
+                    res['remaining_time'] = (then - now).seconds
+                else:
+                    res['state'] = 'highscore'
+                    res['remaining_time'] = (then + datetime.timedelta(minutes = HIGHSCORE_LENGTH) - now).seconds
+            else :
+                res = {'error': 'could not find any levels'}
+            
+        if format == 'json':
+            res = simplejson.dumps({'response': res})
+        elif format == 'xml':
+            res = dict2xml({'response': res}).to_string()
+        
+        self.response.out.write(res)
+            
 
 class LevelHandler(webapp.RequestHandler):
 
@@ -36,20 +74,21 @@ class LevelHandler(webapp.RequestHandler):
         if id is None:
             res = {"response": {"error": "no level id with submission"}}
         else:
-            level = Level.all().filter('level_id =', id).get()
+            level = Level.get_by_id(long(id))
             user_name = self.request.get('user')
-            user = User.all().filter('name =', user_name)
+            user = User.all().filter('name =', user_name).get()
             if user is None:
                 user = User(name = user_name)
                 user.put()
             score = self.request.get('score', 0)
-            words_found = self.request.get('words_found', [])
+            words_found = self.request.get('words_found').split(",")
                  
             submission = Submission()
             submission.user = user
             submission.level = level
             submission.score = score
             submission.words_found = words_found
+            submission.time = datetime.datetime.now()
             submission.put()
             
             res = {"response": {"status" : "OK"}}
@@ -139,10 +178,18 @@ class ScoreHandler(webapp.RequestHandler):
         
         self.response.out.write(res)   
                 
+
+class ClientHandler(webapp.RequestHandler):
+    def get(self):
+        path = os.path.join(os.path.dirname(__file__), 'client/index.html')
+        file = open(path)
+        self.response.out.write(file.read())
                         
     
 application = webapp.WSGIApplication([('/level', LevelHandler),
-                                      ('/score', ScoreHandler)], debug=True)
+                                      ('/score', ScoreHandler),
+                                      ('/join', HandshakeHandler),
+                                      ('/', ClientHandler)], debug=True)
 
 
 def main():

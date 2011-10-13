@@ -1,0 +1,34 @@
+<html>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+	<script type="text/javascript" src="client/js/client.js"></script>
+	<head></head>
+	<body>
+		<script>
+			$(window).ready(function(){
+				client.init();
+			});
+		</script>
+		
+		<div id="grid" style="text-align: center;">
+		
+		</div>
+		Wordbank:
+		<div id="wordbank">
+			
+		</div>
+		<P>
+		<form>
+		User:
+		<input type="textfield" name="user" />
+		<P>
+			Found words:
+			<br>
+			<textarea name="found_words"></textarea>
+		</P>
+		<P>
+			<input type="button" value="submit" id="submit_game" />
+		</P>
+		</form>
+		</P>
+	</body>
+</html>
