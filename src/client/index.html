@@ -9,26 +9,33 @@
 			});
 		</script>
 		
-		<div id="grid" style="text-align: center;">
-		
-		</div>
-		Wordbank:
-		<div id="wordbank">
+		<div id="game" style="display: none;">
+			<div id="grid" style="text-align: center;">
 			
+			</div>
+			Wordbank:
+			<div id="wordbank">
+				
+			</div>
+			<P>
+			<form>
+			User:
+			<input type="textfield" name="user" />
+			<P>
+				Found words:
+				<br>
+				<textarea name="found_words"></textarea>
+			</P>
+			</form>
+			</P>
 		</div>
-		<P>
-		<form>
-		User:
-		<input type="textfield" name="user" />
-		<P>
-			Found words:
-			<br>
-			<textarea name="found_words"></textarea>
-		</P>
-		<P>
-			<input type="button" value="submit" id="submit_game" />
-		</P>
-		</form>
-		</P>
+		<div id="scores" style="display: none; text-align: center;">
+			Highscores
+			<div id="list">
+				
+			</div>
+		</div>
+		<div id="waiting" style="display: none;">
+		</div>
 	</body>
 </html>

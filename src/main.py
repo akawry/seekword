@@ -8,17 +8,18 @@ from dict2xml import dict2xml
 import datetime
 import os
 
-# game length, in minutes
-GAME_LENGTH = 2
-# showing the highscores, in minutes
-HIGHSCORE_LENGTH = 1
+# game length, in seconds
+GAME_LENGTH = 30
+# showing the highscores, in seconds
+HIGHSCORE_LENGTH = 30
 
 def get_current_level():
     level = memcache.get('level')
     if level is None:
         now = datetime.datetime.now()
-        level = Level.all().filter('time <=', now).filter('time >=', now - datetime.timedelta(minutes = GAME_LENGTH + HIGHSCORE_LENGTH)).get()
+        #level = Level.all().filter('time <=', now).filter('time >=', now - datetime.timedelta(seconds = GAME_LENGTH + HIGHSCORE_LENGTH)).get()
         #memcache.set('level', level)
+        level = Level.all().get()
     return level
 
 class HandshakeHandler(webapp.RequestHandler):
@@ -33,14 +34,14 @@ class HandshakeHandler(webapp.RequestHandler):
             
             if level is not None:
                 now = datetime.datetime.now()
-                then = level.time + datetime.timedelta(minutes = GAME_LENGTH)
+                then = level.time + datetime.timedelta(seconds = GAME_LENGTH)
             
                 if now < then:
                     res['state'] = 'game'
                     res['remaining_time'] = (then - now).seconds
                 else:
                     res['state'] = 'highscore'
-                    res['remaining_time'] = (then + datetime.timedelta(minutes = HIGHSCORE_LENGTH) - now).seconds
+                    res['remaining_time'] = (then + datetime.timedelta(seconds = HIGHSCORE_LENGTH) - now).seconds
             else :
                 res = {'error': 'could not find any levels'}
             
