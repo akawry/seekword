@@ -1,11 +1,21 @@
-var GRID_SIZE = 9,
+var GRID_WIDTH = 9,
+	GRID_HEIGHT = 10,
+	GRID_SIZE = '60px',
 	GAME_LENGTH,
 	HIGHSCORE_LENGTH,
 	BUFFER_LENGTH;
 
+var colors = {
+	mouseover: "#DEDEDE",
+	mousedown: "#CDCDCD",
+	mouseout: "#FFFFFF"
+};
+
 client = {
 	init : function(args){
 		console.log("starting web client...");
+		
+		this.setupGrid(GRID_WIDTH, GRID_HEIGHT);
 		
 		console.log("handshaking ...")
 		$.ajax({
@@ -35,10 +45,150 @@ client = {
 			
 	},
 	
+	setupGrid : function(width, height){
+		for (var i = 0; i < height; i++){
+			for (var j = 0; j < width; j++){
+				$("#grid").append(
+					"<div id='grid" + i + "" + j + 
+						"' style='width: " + GRID_SIZE + "; height: " + GRID_SIZE+ ";" +
+						"text-align: center; display: inline-block;'>"+
+					"</div>");
+				$("#grid"+i+j).mouseenter(function(){
+					if (!$("#grid").attr('gridX'))
+						$(this).css({
+							'background-color' : colors.mouseover
+						});
+				}).mouseleave(function(){
+					$(this).css({
+						'background-color' : colors.mouseout
+					});
+				}).mousedown(function(){
+					$(this).css({
+						'background-color' : colors.mousedown
+					});
+					
+					$("#grid").attr('gridX', $(this).attr('id').charAt('grid'.length + 1)).attr('gridY', $(this).attr('id').charAt('grid'.length));
+				});
+			}
+			$("#grid").append("<br/>");
+		}
+		
+		var deselectAll = function(){
+			for (var i = 0; i < height; i++){
+				for (var j = 0; j < width; j++){
+					$("#grid"+i+j).css({
+						'background-color' : colors.mouseout
+					});
+				}
+			}
+		};
+		
+		var me = this;
+		$("#grid").mousemove(function(evt){
+			
+			var x = $(this).attr('gridX'),
+				y = $(this).attr('gridY'),
+				newX = $(evt.target).attr('id').charAt('grid'.length + 1),
+				newY = $(evt.target).attr('id').charAt('grid'.length);
+			
+			if (x && y){
+				if (x == newX && y != newY){
+					deselectAll();
+					for (var i = 0; i <= Math.abs(newY - y); i++){
+						$("#grid" + (Math.min(newY, y) + i) + x).css({
+							'background-color' : colors.mousedown
+						});
+					}
+				} else if (y == newY && x != newX){
+					deselectAll();
+					for (var i = 0; i <= Math.abs(newX - x); i++){
+						$("#grid" + y + (Math.min(newX, x) + i)).css({
+							'background-color' : colors.mousedown
+						});
+					}
+				} else if (Math.abs(newX - x) == Math.abs(newY - y)){
+					deselectAll();
+					for (var i = 0; i <= Math.abs(newX - x); i++){
+						
+						if (newX < x && newY > y){
+							$("#grid" + (newY - i) + (Number(newX) + i)).css({
+								'background-color' : colors.mousedown
+							});
+						} else if (newX > x && newY < y){
+							$("#grid" + (Number(y) - i) + (Number(x) + i)).css({
+								'background-color' : colors.mousedown
+							});
+						} else {
+							$("#grid" + (Math.min(newY, y) + i) + (Math.min(newX, x) + i)).css({
+								'background-color' : colors.mousedown
+							});
+						}
+					}
+				}
+			}
+		}).mouseup(function(evt){
+			
+			var x = $(this).attr('gridX'),
+				y = $(this).attr('gridY'),
+				newX = $(evt.target).attr('id').charAt('grid'.length + 1),
+				newY = $(evt.target).attr('id').charAt('grid'.length),
+				word = "",
+				selectedColor = $(evt.target).css('background-color');
+			
+			$.each($("#grid > div").filter(function(){
+				return $(this).css('background-color') == selectedColor;
+			}), function(i, el){
+				word += $(el).html();
+			});
+			
+			if ((newX < x || newY < y) && !(newX < x && newY > y)){
+				var buff = "";
+				for (var i = word.length - 1; i >= 0; i--)
+					buff += word.charAt(i);
+				word = buff;
+			}
+			me.checkWord(word);
+			
+			deselectAll();
+			$(this).attr('gridX', null).attr('gridY', null);
+		}).bind('dragstart', function(evt){
+			evt.preventDefault();
+		}).bind('selectstart', function(evt){
+			evt.preventDefault();
+		});
+	},
+	
+	fillGrid : function(width, height, grid){
+		for (var i = 0; i < GRID_HEIGHT; i++){
+			for (var j = 0; j < GRID_WIDTH; j++){
+				$("#grid"+i+j).html(grid.charAt(i * GRID_WIDTH + j));
+			}
+		}
+	},
+	
+	checkWord: function(word){
+		
+		console.log("checking word " + word);
+		
+		$.each($("#wordbank > span"), function(i, el){
+			if ($(el).html() == word){
+				$(el).css({
+					'text-decoration' : 'line-through'
+				});
+			}
+		});
+	},
+	
 	submitGame: function(){
 		var user = $('input').val(),
-		words = $('textarea').val();
-		words = words.replace(" ", "");
+			words = "",
+			found = $("#wordbank > span").filter(function(){
+				return $(this).css("text-decoration") == "line-through";
+			});
+		
+		$.each(found, function(i, el){
+			words += $(el).html() + (i < found.length - 1 ? "," : "");
+		});
 		
 		$.ajax({
 			url: '/level',
@@ -105,13 +255,10 @@ client = {
 		console.log(res);
 		
 		this.level_id = res.level_id;
-		var game_grid = "";
-		var rows = res.grid.length / GRID_SIZE;
-		for (var i = 0; i < rows; i++){
-			game_grid += res.grid.substring(i * GRID_SIZE, (i + 1) * GRID_SIZE) + "<br>";
-		}
-		$("#grid").html(game_grid);
-		$("#wordbank").html(res.word_bank.join(", "));
+		this.fillGrid(GRID_WIDTH, GRID_HEIGHT, res.grid);
+		$.each(res.word_bank, function(i, word){
+			$("#wordbank").append("<span style='padding-right: 5px'>" + word + "</span>");
+		});
 	},
 	
 	handleReceiveScores : function(res){

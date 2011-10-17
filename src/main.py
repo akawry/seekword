@@ -9,7 +9,7 @@ import datetime
 import os
 
 # game length, in seconds
-GAME_LENGTH = 20
+GAME_LENGTH = 9999
 # showing the highscores, in seconds
 HIGHSCORE_LENGTH = 20
 # buffer time between games and highscores
