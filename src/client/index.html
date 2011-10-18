@@ -1,14 +1,16 @@
 <html>
-	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
-	<script type="text/javascript" src="client/js/client.js"></script>
-	<head></head>
-	<body>
-		<script>
-			$(window).ready(function(){
-				client.init();
-			});
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+		<script type="text/javascript" src="client/js/client.js"></script>
+		<script type="text/javascript" src="client/js/cufon-yui.js"></script>
+		<script type="text/javascript" src="client/js/segoe_400-segoe_700.font.js"></script>
+		<link rel=stylesheet href="client/css/wp7.css" type="text/css">
+		<script type="text/javascript">
+			Cufon.replace('body'); // Works without a selector engine
 		</script>
-		
+	</head>
+	<body>
 		<div id="game" style="display: none;">
 			<div id="grid" style="text-align: center;">
 			
@@ -33,5 +35,15 @@
 		<div id="waiting" style="display: none;">
 			Waiting for other players to finish submitting ...
 		</div>
+		
+		<script>
+			Cufon.now();
+			$(document).ready(function(){
+				client.init();
+			}).ajaxSuccess(function() {
+				Cufon.refresh();
+			});
+		</script>
+		
 	</body>
 </html>

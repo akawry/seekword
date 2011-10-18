@@ -5,6 +5,9 @@ api_version: 1
 
 handlers:
 
+- url: /client/css/
+  static_dir: client/css
+
 - url: /client/js/
   static_dir: client/js     
     

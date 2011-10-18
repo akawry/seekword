@@ -15,6 +15,12 @@ client = {
 	init : function(args){
 		console.log("starting web client...");
 		
+		$("#game").bind('dragstart', function(evt){
+			evt.preventDefault();
+		}).bind('selectstart', function(evt){
+			evt.preventDefault();
+		});
+		
 		this.setupGrid(GRID_WIDTH, GRID_HEIGHT);
 		
 		console.log("handshaking ...")
@@ -48,25 +54,14 @@ client = {
 	setupGrid : function(width, height){
 		for (var i = 0; i < height; i++){
 			for (var j = 0; j < width; j++){
-				$("#grid").append(
-					"<div id='grid" + i + "" + j + 
-						"' style='width: " + GRID_SIZE + "; height: " + GRID_SIZE+ ";" +
-						"text-align: center; display: inline-block;'>"+
-					"</div>");
+				$("#grid").append("<span id='grid"+i+j+"' class='tile'></span>");
 				$("#grid"+i+j).mouseenter(function(){
 					if (!$("#grid").attr('gridX'))
-						$(this).css({
-							'background-color' : colors.mouseover
-						});
+						$(this).addClass("hover");
 				}).mouseleave(function(){
-					$(this).css({
-						'background-color' : colors.mouseout
-					});
+					$(this).removeClass("hover");
 				}).mousedown(function(){
-					$(this).css({
-						'background-color' : colors.mousedown
-					});
-					
+					$(this).addClass("selected");
 					$("#grid").attr('gridX', $(this).attr('id').charAt('grid'.length + 1)).attr('gridY', $(this).attr('id').charAt('grid'.length));
 				});
 			}
@@ -76,52 +71,42 @@ client = {
 		var deselectAll = function(){
 			for (var i = 0; i < height; i++){
 				for (var j = 0; j < width; j++){
-					$("#grid"+i+j).css({
-						'background-color' : colors.mouseout
-					});
+					$("#grid"+i+j).removeClass("selected");
 				}
 			}
 		};
 		
 		var me = this;
 		$("#grid").mousemove(function(evt){
-			
+			console.log();
 			var x = $(this).attr('gridX'),
 				y = $(this).attr('gridY'),
-				newX = $(evt.target).attr('id').charAt('grid'.length + 1),
-				newY = $(evt.target).attr('id').charAt('grid'.length);
+				id = $(evt.target).closest('span').attr('id');
 			
-			if (x && y){
+			if (id && x && y){
+				var newX = id.charAt('grid'.length + 1),
+					newY = id.charAt('grid'.length);
+
 				if (x == newX && y != newY){
 					deselectAll();
 					for (var i = 0; i <= Math.abs(newY - y); i++){
-						$("#grid" + (Math.min(newY, y) + i) + x).css({
-							'background-color' : colors.mousedown
-						});
+						$("#grid" + (Math.min(newY, y) + i) + x).addClass("selected");
 					}
 				} else if (y == newY && x != newX){
 					deselectAll();
 					for (var i = 0; i <= Math.abs(newX - x); i++){
-						$("#grid" + y + (Math.min(newX, x) + i)).css({
-							'background-color' : colors.mousedown
-						});
+						$("#grid" + y + (Math.min(newX, x) + i)).addClass("selected");
 					}
 				} else if (Math.abs(newX - x) == Math.abs(newY - y)){
 					deselectAll();
 					for (var i = 0; i <= Math.abs(newX - x); i++){
 						
 						if (newX < x && newY > y){
-							$("#grid" + (newY - i) + (Number(newX) + i)).css({
-								'background-color' : colors.mousedown
-							});
+							$("#grid" + (newY - i) + (Number(newX) + i)).addClass("selected");
 						} else if (newX > x && newY < y){
-							$("#grid" + (Number(y) - i) + (Number(x) + i)).css({
-								'background-color' : colors.mousedown
-							});
+							$("#grid" + (Number(y) - i) + (Number(x) + i)).addClass("selected");
 						} else {
-							$("#grid" + (Math.min(newY, y) + i) + (Math.min(newX, x) + i)).css({
-								'background-color' : colors.mousedown
-							});
+							$("#grid" + (Math.min(newY, y) + i) + (Math.min(newX, x) + i)).addClass("selected");
 						}
 					}
 				}
@@ -130,38 +115,37 @@ client = {
 			
 			var x = $(this).attr('gridX'),
 				y = $(this).attr('gridY'),
-				newX = $(evt.target).attr('id').charAt('grid'.length + 1),
-				newY = $(evt.target).attr('id').charAt('grid'.length),
-				word = "",
-				selectedColor = $(evt.target).css('background-color');
-			
-			$.each($("#grid > div").filter(function(){
-				return $(this).css('background-color') == selectedColor;
-			}), function(i, el){
-				word += $(el).html();
-			});
-			
-			if ((newX < x || newY < y) && !(newX < x && newY > y)){
-				var buff = "";
-				for (var i = word.length - 1; i >= 0; i--)
-					buff += word.charAt(i);
-				word = buff;
+				id = $(evt.target).closest('span').attr('id');
+			if (id){
+				var newX = id.charAt('grid'.length + 1),
+					newY = id.charAt('grid'.length),
+					word = "",
+					selectedColor = $(evt.target).closest('span').css('background-color');
+				
+				$.each($("#grid > span").filter(function(){
+					return $(this).css('background-color') == selectedColor;
+				}), function(i, el){
+					word += $(el).text();
+				});
+				
+				if ((newX < x || newY < y) && !(newX < x && newY > y)){
+					var buff = "";
+					for (var i = word.length - 1; i >= 0; i--)
+						buff += word.charAt(i);
+					word = buff;
+				}
+				me.checkWord(word);
 			}
-			me.checkWord(word);
-			
+				
 			deselectAll();
 			$(this).attr('gridX', null).attr('gridY', null);
-		}).bind('dragstart', function(evt){
-			evt.preventDefault();
-		}).bind('selectstart', function(evt){
-			evt.preventDefault();
 		});
 	},
 	
 	fillGrid : function(width, height, grid){
 		for (var i = 0; i < GRID_HEIGHT; i++){
 			for (var j = 0; j < GRID_WIDTH; j++){
-				$("#grid"+i+j).html(grid.charAt(i * GRID_WIDTH + j));
+				$("#grid"+i+j).html(grid.charAt(i * GRID_WIDTH + j).toUpperCase());
 			}
 		}
 	},
@@ -171,10 +155,9 @@ client = {
 		console.log("checking word " + word);
 		
 		$.each($("#wordbank > span"), function(i, el){
-			if ($(el).html() == word){
-				$(el).css({
-					'text-decoration' : 'line-through'
-				});
+			if ($(el).text() == word){
+				$(el).addClass("found");
+				Cufon.refresh();
 			}
 		});
 	},
@@ -257,7 +240,7 @@ client = {
 		this.level_id = res.level_id;
 		this.fillGrid(GRID_WIDTH, GRID_HEIGHT, res.grid);
 		$.each(res.word_bank, function(i, word){
-			$("#wordbank").append("<span style='padding-right: 5px'>" + word + "</span>");
+			$("#wordbank").append("<span style='padding-right: 5px'>" + word.toUpperCase() + "</span>");
 		});
 	},
 	

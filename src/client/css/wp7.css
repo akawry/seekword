@@ -1,0 +1,23 @@
+body {
+	background-color: black;
+	color: white;
+}
+
+.tile {
+	width: 60px;
+	height: 60px;
+	background-color: rgb(27, 160, 225);
+	text-align: center;
+	display: inline-block;
+	vertical-align: middle;
+	margin: 0.1em;
+	font-size: 2em;
+}
+
+.selected {
+	background-color: rgb(0, 176, 80) !important;
+}
+
+.found {
+	color: red;
+}
