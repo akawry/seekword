@@ -1,17 +1,26 @@
 body {
-	background-color: black;
-	color: white;
+	background-color: black !important;
+	color: white !important;
 }
 
 .tile {
 	width: 60px;
 	height: 60px;
 	background-color: rgb(27, 160, 225);
-	text-align: center;
 	display: inline-block;
-	vertical-align: middle;
-	margin: 0.1em;
+	margin: 0.3em;
+	position: relative;
+}
+
+.tile-title {
+	position: absolute;
+	top: 50%;
+	margin-top: -0.5em;
 	font-size: 2em;
+	font-height: 2em;
+	height: 60px;
+	text-align: center;
+	width: 100%;
 }
 
 .selected {

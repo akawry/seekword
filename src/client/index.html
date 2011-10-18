@@ -1,7 +1,11 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		
+		<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0a1/jquery.mobile-1.0a1.min.css" />
+		<script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+		<script src="http://code.jquery.com/mobile/1.0rc1/jquery.mobile-1.0rc1.min.js"></script>
 		<script type="text/javascript" src="client/js/client.js"></script>
 		<script type="text/javascript" src="client/js/cufon-yui.js"></script>
 		<script type="text/javascript" src="client/js/segoe_400-segoe_700.font.js"></script>
@@ -11,29 +15,31 @@
 		</script>
 	</head>
 	<body>
-		<div id="game" style="display: none;">
-			<div id="grid" style="text-align: center;">
-			
-			</div>
-			Wordbank:
-			<div id="wordbank">
+		<div data-role="page" id="game">
+			<div data-role="content">
+				<div id="grid" style="text-align: center;">
 				
-			</div>
-			<P>
-			<form>
-			User:
-			<input type="textfield" name="user" />
-			</form>
-			</P>
-		</div>
-		<div id="scores" style="display: none; text-align: center;">
-			Highscores
-			<div id="list">
-				
+				</div>
+				Wordbank:
+				<div id="wordbank">
+					
+				</div>
 			</div>
 		</div>
-		<div id="waiting" style="display: none;">
-			Waiting for other players to finish submitting ...
+		
+		<div data-role="page" id="scores">
+			<div data-role="content">
+				Highscores
+				<div id="list">
+					
+				</div>
+			</div>
+		</div>
+		
+		<div data-role="page" id="waiting">
+			<div data-role="content">
+				Waiting for other players to finish submitting ...
+			</div>
 		</div>
 		
 		<script>
@@ -42,6 +48,8 @@
 				client.init();
 			}).ajaxSuccess(function() {
 				Cufon.refresh();
+			}).bind("touchmove",function(evt){
+				evt.preventDefault();
 			});
 		</script>
 		

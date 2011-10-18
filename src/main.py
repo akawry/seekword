@@ -193,12 +193,21 @@ class ClientHandler(webapp.RequestHandler):
         path = os.path.join(os.path.dirname(__file__), 'client/index.html')
         file = open(path)
         self.response.out.write(file.read())
+        
+class FillHandler(webapp.RequestHandler):
+    def get(self):
+        level = Level()
+        level.grid = "abcdefghijklmnopqrstuvwxyzaabcdefghijklmnopqrstuvwxyzaabcdefghijklmnopqrstuvwxyzaabcdefghi"
+        level.word_bank = ["abc", "def", "ghi", "klmnop"]
+        level.time = datetime.datetime.now()
+        level.put()
                         
     
 application = webapp.WSGIApplication([('/level', LevelHandler),
                                       ('/score', ScoreHandler),
                                       ('/join', HandshakeHandler),
-                                      ('/', ClientHandler)], debug=True)
+                                      ('/', ClientHandler),
+                                      ('/fill', FillHandler)], debug=True)
 
 
 def main():

@@ -13,6 +13,10 @@ handlers:
     
 - url: /client/index.html
   static_dir: client/index.html     
+
+- url: /fill
+  script: main.py
+  login: admin
    
 - url: /.*
   script: main.py

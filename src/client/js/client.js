@@ -1,15 +1,8 @@
 var GRID_WIDTH = 9,
 	GRID_HEIGHT = 10,
-	GRID_SIZE = '60px',
 	GAME_LENGTH,
 	HIGHSCORE_LENGTH,
 	BUFFER_LENGTH;
-
-var colors = {
-	mouseover: "#DEDEDE",
-	mousedown: "#CDCDCD",
-	mouseout: "#FFFFFF"
-};
 
 client = {
 	init : function(args){
@@ -54,13 +47,11 @@ client = {
 	setupGrid : function(width, height){
 		for (var i = 0; i < height; i++){
 			for (var j = 0; j < width; j++){
-				$("#grid").append("<span id='grid"+i+j+"' class='tile'></span>");
-				$("#grid"+i+j).mouseenter(function(){
-					if (!$("#grid").attr('gridX'))
-						$(this).addClass("hover");
-				}).mouseleave(function(){
-					$(this).removeClass("hover");
-				}).mousedown(function(){
+				$("#grid").append(
+					"<div id='grid"+i+j+"' class='tile'>"+
+						"<span class='tile-title'></span>"+
+					"</div>");
+				$("#grid"+i+j).bind('vmousedown', function(){
 					$(this).addClass("selected");
 					$("#grid").attr('gridX', $(this).attr('id').charAt('grid'.length + 1)).attr('gridY', $(this).attr('id').charAt('grid'.length));
 				});
@@ -77,11 +68,11 @@ client = {
 		};
 		
 		var me = this;
-		$("#grid").mousemove(function(evt){
-			console.log();
+		$("#grid").bind('vmousemove', function(evt){
+			
 			var x = $(this).attr('gridX'),
 				y = $(this).attr('gridY'),
-				id = $(evt.target).closest('span').attr('id');
+				id = $(evt.target).closest('div').attr('id');
 			
 			if (id && x && y){
 				var newX = id.charAt('grid'.length + 1),
@@ -111,18 +102,18 @@ client = {
 					}
 				}
 			}
-		}).mouseup(function(evt){
+		}).bind('vmouseup', function(evt){
 			
 			var x = $(this).attr('gridX'),
 				y = $(this).attr('gridY'),
-				id = $(evt.target).closest('span').attr('id');
+				id = $(evt.target).closest('div').attr('id');
 			if (id){
 				var newX = id.charAt('grid'.length + 1),
 					newY = id.charAt('grid'.length),
 					word = "",
-					selectedColor = $(evt.target).closest('span').css('background-color');
+					selectedColor = $(evt.target).closest('div').css('background-color');
 				
-				$.each($("#grid > span").filter(function(){
+				$.each($("#grid > div").filter(function(){
 					return $(this).css('background-color') == selectedColor;
 				}), function(i, el){
 					word += $(el).text();
@@ -145,7 +136,7 @@ client = {
 	fillGrid : function(width, height, grid){
 		for (var i = 0; i < GRID_HEIGHT; i++){
 			for (var j = 0; j < GRID_WIDTH; j++){
-				$("#grid"+i+j).html(grid.charAt(i * GRID_WIDTH + j).toUpperCase());
+				$("#grid"+i+j).find('.tile-title').html(grid.charAt(i * GRID_WIDTH + j).toUpperCase());
 			}
 		}
 	},
@@ -196,7 +187,7 @@ client = {
 	
 	requestGame : function(remaining_time){
 		console.log("requesting game with "+remaining_time+" seconds left");
-		this.setState("game");
+		$.mobile.changePage("#game");
 		
 		$.ajax({
 			url: '/level?format=json',
@@ -216,7 +207,7 @@ client = {
 	
 	requestHighscore: function(remaining_time){
 		console.log("request highscores");
-		this.setState("scores");
+		$.mobile.changePage($("#scores"));
 		
 		$.ajax({
 			url: '/score?format=json',
@@ -257,54 +248,11 @@ client = {
 	},
 	
 	waitForOthers : function(remaining_time){
-		this.setState("buffer");
+		$.mobile.changePage($("#waiting"));
 		remaining_time = remaining_time || BUFFER_LENGTH;
 		var me = this;
 		setTimeout(function(){
 			me.requestHighscore();
 		}, remaining_time * 1000);
-	},
-	
-	setState : function(state){
-		switch(state){
-		case "game":
-			$("#game").css({
-				display: 'block'
-			});
-			$("#scores").css({
-				display: 'none'
-			});
-			$("#waiting").css({
-				display: 'none'
-			});
-			
-			break;
-			
-		case "buffer":
-			$("#game").css({
-				display: 'none'
-			});
-			$("#scores").css({
-				display: 'none'
-			});
-			$("#waiting").css({
-				display: 'block'
-			});
-			
-			break;
-			
-		case "scores":
-			$("#game").css({
-				display: 'none'
-			});
-			$("#scores").css({
-				display: 'block'
-			});
-			$("#waiting").css({
-				display: 'none'
-			});
-			
-			break;
-		}
 	}
 };
